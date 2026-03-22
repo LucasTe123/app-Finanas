@@ -28,9 +28,19 @@ const NOMBRES_MESES = [
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
 ];
 
-const Calendario = ({ navigation }) => {
+const Calendario = ({ navigation, route }) => {
+
   // Estado: fecha actual navegada (mes/año)
-  const [fechaActual, setFechaActual] = useState(new Date());
+  // Recibe el mes desde VistaAnual, si no hay parámetro usa la fecha de hoy
+const mesInicial = route?.params?.mes;
+const anioInicial = route?.params?.anio;
+
+const fechaInicio = mesInicial !== undefined
+  ? new Date(anioInicial || 2026, mesInicial, 1)
+  : new Date();
+
+const [fechaActual, setFechaActual] = useState(fechaInicio);
+
   // Estado: días con registros { "2026-03-22": "positivo", ... }
   const [diasConRegistros, setDiasConRegistros] = useState({});
   const [resumenMes, setResumenMes] = useState({ ingresos: 0, gastos: 0, balance: 0 });

@@ -18,6 +18,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { obtenerRegistrosPorFecha } from '../base_datos/baseDatos';
 import { detectarCategoria } from '../logica/interpretador';
 import colores from '../estilos/colores';
+import { Swipeable } from 'react-native-gesture-handler';
+import { obtenerRegistrosPorFecha, borrarRegistro } from '../base_datos/baseDatos';
+
+
 
 // ------------------------------------------------------------
 // NOMBRES DE MESES para mostrar la fecha bonita
@@ -29,10 +33,14 @@ const NOMBRES_MESES = [
 ];
 
 const DetalleDia = ({ route, navigation }) => {
-  // Recibir la fecha desde el calendario
   const { fecha } = route.params;
-  // Estado con los registros del día
   const [registros, setRegistros] = useState([]);
+
+  // PEGAR AQUÍ:
+  const handleBorrar = (id) => {
+    borrarRegistro(id, fecha);
+    setRegistros(obtenerRegistrosPorFecha(fecha));
+  };
 
   // ----------------------------------------------------------
   // Cargar registros cada vez que la pantalla está en foco
@@ -94,8 +102,13 @@ const ICONOS_CATEGORIA = {
   otros:       { nombre: 'cube',              color: '#8E8E93' },
 };
 
-const TarjetaRegistro = ({ item }) => {
-  // Detectar categoría para elegir ícono
+const AccionBorrar = ({ onPress }) => (
+  <TouchableOpacity style={estilos.botonBorrar} onPress={onPress}>
+    <Text style={estilos.textoBorrar}>Borrar</Text>
+  </TouchableOpacity>
+);
+
+const TarjetaRegistro = ({ item, onBorrar }) => {
   const categoria = detectarCategoria(
     item.texto_original || item.objeto,
     item.tipo
@@ -103,37 +116,35 @@ const TarjetaRegistro = ({ item }) => {
   const icono = ICONOS_CATEGORIA[categoria] || ICONOS_CATEGORIA.otros;
 
   return (
-    <View style={estilos.tarjeta}>
-      {/* Ícono de categoría */}
-      <View style={[
-        estilos.iconoContenedor,
-        { backgroundColor: `${icono.color}22` }
-      ]}>
-        <Ionicons
-          name={icono.nombre}
-          size={20}
-          color={icono.color}
-        />
-      </View>
-
-      {/* Información del registro */}
-      <View style={estilos.infoRegistro}>
-        <Text style={estilos.nombreObjeto}>{item.objeto}</Text>
-        <Text style={estilos.textoOriginal} numberOfLines={1}>
-          {item.texto_original}
+    <Swipeable
+      renderRightActions={() => <AccionBorrar onPress={() => onBorrar(item.id)} />}
+      overshootRight={false}
+    >
+      <View style={estilos.tarjeta}>
+        <View style={[estilos.iconoContenedor, { backgroundColor: `${icono.color}22` }]}>
+          <Ionicons name={icono.nombre} size={20} color={icono.color} />
+        </View>
+        <View style={estilos.infoRegistro}>
+          <Text style={estilos.nombreObjeto}>{item.objeto}</Text>
+          <Text style={estilos.textoOriginal} numberOfLines={1}>
+            {item.texto_original}
+          </Text>
+          {/* Hora del registro */}
+          {item.hora ? (
+            <Text style={estilos.horaRegistro}>{item.hora}</Text>
+          ) : null}
+        </View>
+        <Text style={[
+          estilos.precio,
+          item.tipo === 'gasto' ? estilos.precioGasto : estilos.precioIngreso
+        ]}>
+          {item.tipo === 'gasto' ? '-' : '+'}Bs {item.precio}
         </Text>
       </View>
-
-      {/* Precio en Bs */}
-      <Text style={[
-        estilos.precio,
-        item.tipo === 'gasto' ? estilos.precioGasto : estilos.precioIngreso
-      ]}>
-        {item.tipo === 'gasto' ? '-' : '+'}Bs {item.precio}
-      </Text>
-    </View>
+    </Swipeable>
   );
 };
+
 
 
   const { ingresos, gastos, balance } = calcularBalance();
@@ -200,7 +211,7 @@ const TarjetaRegistro = ({ item }) => {
         <FlatList
           data={registros}
           keyExtractor={item => item.id.toString()}
-          renderItem={({ item }) => <TarjetaRegistro item={item} />}
+          renderItem={({ item }) => <TarjetaRegistro item={item} onBorrar={handleBorrar} />}
           contentContainerStyle={estilos.lista}
           ItemSeparatorComponent={() => <View style={estilos.separador} />}
         />
@@ -338,6 +349,25 @@ const estilos = StyleSheet.create({
     color: colores.textoGris,
     fontSize: 14,
   },
+  botonBorrar: {
+  backgroundColor: '#FF3B30',
+  justifyContent: 'center',
+  alignItems: 'center',
+  width: 80,
+  marginVertical: 4,
+  borderRadius: 12,
+},
+textoBorrar: {
+  color: '#fff',
+  fontWeight: '700',
+  fontSize: 15,
+},
+horaRegistro: {
+  color: '#555',
+  fontSize: 11,
+  marginTop: 2,
+},
+
 });
 
 export default DetalleDia;

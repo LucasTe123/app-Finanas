@@ -31,6 +31,7 @@ export const inicializarBaseDatos = () => {
       precio REAL NOT NULL,
       tipo TEXT NOT NULL,
       fecha TEXT NOT NULL,
+      hora TEXT DEFAULT '',
       texto_original TEXT,
       creado_en TEXT DEFAULT (datetime('now'))
     );
@@ -65,9 +66,10 @@ export const inicializarBaseDatos = () => {
 // ------------------------------------------------------------
 export const guardarRegistro = (objeto, precio, tipo, fecha, textoOriginal) => {
   baseDatos.runSync(
-    `INSERT INTO registros (objeto, precio, tipo, fecha, texto_original)
-     VALUES (?, ?, ?, ?, ?);`,
-    [objeto, precio, tipo, fecha, textoOriginal]
+    `INSERT INTO registros (objeto, precio, tipo, fecha, hora, texto_original)
+ VALUES (?, ?, ?, ?, ?, ?);`,
+[objeto, precio, tipo, fecha, new Date().toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' }), textoOriginal]
+
   );
 
   // Actualizar el resumen del día después de guardar
@@ -166,6 +168,14 @@ export const obtenerResumenMes = (anio, mes) => {
     gastos,
     balance: ingresos - gastos,
   });
+};
+// ------------------------------------------------------------
+// FUNCIÓN: borrarRegistro
+// QUÉ HACE: Elimina un registro por su ID y recalcula el día
+// ------------------------------------------------------------
+export const borrarRegistro = (id, fecha) => {
+  baseDatos.runSync(`DELETE FROM registros WHERE id = ?;`, [id]);
+  actualizarDia(fecha);
 };
 
 
