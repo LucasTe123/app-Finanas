@@ -213,12 +213,11 @@ const estilos = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 20,
   },
-  tituloMes: {
-    color: colores.textoBlanco,
-    // AQUÍ CAMBIAR: tamaño del título del mes
-    fontSize: 20,
-    fontWeight: '600',
-  },
+ tituloMes: {
+  color: colores.textoBlanco,
+  fontSize: 20,
+  fontFamily: 'Inter_600SemiBold',
+},
   botonMes: {
     padding: 8,
   },
@@ -233,13 +232,13 @@ const estilos = StyleSheet.create({
     flexDirection: 'row',
     marginBottom: 8,
   },
-  nombreDia: {
-    flex: 1,
-    textAlign: 'center',
-    color: colores.textoGris,
-    fontSize: 12,
-    fontWeight: '500',
-  },
+nombreDia: {
+  flex: 1,
+  textAlign: 'center',
+  color: colores.textoGris,
+  fontSize: 12,
+  fontFamily: 'Inter_500Medium',
+},
 
   // Grid del calendario
   gridCalendario: {
@@ -259,12 +258,11 @@ const estilos = StyleSheet.create({
     backgroundColor: colores.fondoTarjeta,
     borderRadius: 12,
   },
-  numeroDia: {
-    color: colores.textoBlanco,
-    // AQUÍ CAMBIAR: tamaño del número del día
-    fontSize: 16,
-    fontWeight: '400',
-  },
+numeroDia: {
+  color: colores.textoBlanco,
+  fontSize: 16,
+  fontFamily: 'Inter_400Regular',
+},
   numeroDiaHoy: {
     // AQUÍ CAMBIAR: color del número del día actual
     color: colores.acento,

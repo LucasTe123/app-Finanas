@@ -30,6 +30,18 @@ const colores = {
   // Bordes y separadores
   borde: '#2C2C2E',
   separador: '#38383A',
+
 };
+// ------------------------------------------------------------
+// TIPOGRAFÍAS
+// AQUÍ CAMBIAR: fuentes de toda la app
+// ------------------------------------------------------------
+export const fuentes = {
+  regular: 'Inter_400Regular',
+  medium: 'Inter_500Medium',
+  semiBold: 'Inter_600SemiBold',
+  bold: 'Inter_700Bold',
+};
+
 
 export default colores;

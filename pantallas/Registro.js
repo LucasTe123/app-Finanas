@@ -253,17 +253,18 @@ const estilos = StyleSheet.create({
   scroll: {
     padding: 20,
   },
-  titulo: {
-    color: colores.textoBlanco,
-    fontSize: 28,
-    fontWeight: '700',
-    marginBottom: 6,
-  },
-  subtitulo: {
-    color: colores.textoGris,
-    fontSize: 15,
-    marginBottom: 20,
-  },
+ titulo: {
+  color: colores.textoBlanco,
+  fontSize: 28,
+  fontFamily: 'Inter_700Bold',
+  marginBottom: 6,
+},
+ subtitulo: {
+  color: colores.textoGris,
+  fontSize: 15,
+  fontFamily: 'Inter_400Regular',
+  marginBottom: 20,
+},
 
   // Tarjeta de ejemplos
   tarjetaEjemplos: {
@@ -302,11 +303,11 @@ const estilos = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
   },
-  textoBoton: {
-    color: colores.textoBlanco,
-    fontSize: 16,
-    fontWeight: '600',
-  },
+ textoBoton: {
+  color: colores.textoBlanco,
+  fontSize: 16,
+  fontFamily: 'Inter_600SemiBold',
+},
 
   // Tarjeta resultado
   tarjetaResultado: {
