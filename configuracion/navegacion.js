@@ -1,64 +1,61 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+
+import VistaAnual from '../pantallas/VistaAnual';
 import Calendario from '../pantallas/Calendario';
 import Registro from '../pantallas/Registro';
 import DetalleDia from '../pantallas/DetalleDia';
 
-const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
+const Tab = createBottomTabNavigator();
 
-const COLORES = {
-  fondoTab: '#111111',
-  iconoActivo: '#FFFFFF',
-  iconoInactivo: '#555555',
-  borde: '#222222',
-};
-
-// Stack del calendario (incluye pantalla de detalle)
-const StackCalendario = () => {
+// Stack para la sección calendario (Anual → Mes → Día)
+function StackCalendario() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="CalendarioPrincipal" component={Calendario} />
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+        animation: 'default', // animación nativa de Apple
+      }}
+    >
+      <Stack.Screen name="VistaAnual" component={VistaAnual} />
+      <Stack.Screen name="Calendario" component={Calendario} />
       <Stack.Screen name="DetalleDia" component={DetalleDia} />
     </Stack.Navigator>
   );
-};
+}
 
-const Navegacion = () => {
+export default function Navegacion() {
   return (
     <NavigationContainer>
       <Tab.Navigator
         screenOptions={({ route }) => ({
-          tabBarIcon: ({ focused, color, size }) => {
-            let nombreIcono;
-            if (route.name === 'CalendarioTab') {
-              nombreIcono = focused ? 'calendar' : 'calendar-outline';
-            } else if (route.name === 'RegistroTab') {
-              nombreIcono = focused ? 'add-circle' : 'add-circle-outline';
-            }
-            return <Ionicons name={nombreIcono} size={size} color={color} />;
-          },
-          tabBarActiveTintColor: COLORES.iconoActivo,
-          tabBarInactiveTintColor: COLORES.iconoInactivo,
-          tabBarStyle: {
-            backgroundColor: COLORES.fondoTab,
-            borderTopColor: COLORES.borde,
-            borderTopWidth: 1,
-            paddingBottom: 5,
-            paddingTop: 5,
-            height: 60,
-          },
           headerShown: false,
+          tabBarStyle: {
+            backgroundColor: '#1C1C1E',
+            borderTopColor: '#2C2C2E',
+          },
+          tabBarActiveTintColor: '#fff',
+          tabBarInactiveTintColor: '#555',
+          tabBarIcon: ({ color, size }) => {
+            const iconos = {
+              Calendarios: 'calendar',
+              Registrar: 'add-circle',
+            };
+            return <Ionicons name={iconos[route.name]} size={size} color={color} />;
+          },
         })}
       >
-        <Tab.Screen name="CalendarioTab" component={StackCalendario} options={{ tabBarLabel: 'Calendario' }} />
-        <Tab.Screen name="RegistroTab" component={Registro} options={{ tabBarLabel: 'Registrar' }} />
+        <Tab.Screen name="Calendarios" component={StackCalendario} />
+        <Tab.Screen
+          name="Registrar"
+          component={Registro}
+          options={{ tabBarLabel: 'Registrar' }}
+        />
       </Tab.Navigator>
     </NavigationContainer>
   );
-};
-
-export default Navegacion;
+}

@@ -14,7 +14,8 @@ import {
   StatusBar,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { obtenerTodosDias } from '../base_datos/baseDatos';
+import { obtenerTodosDias, obtenerResumenMes } from '../base_datos/baseDatos';
+
 import colores from '../estilos/colores';
 
 // ------------------------------------------------------------
@@ -32,6 +33,8 @@ const Calendario = ({ navigation }) => {
   const [fechaActual, setFechaActual] = useState(new Date());
   // Estado: días con registros { "2026-03-22": "positivo", ... }
   const [diasConRegistros, setDiasConRegistros] = useState({});
+  const [resumenMes, setResumenMes] = useState({ ingresos: 0, gastos: 0, balance: 0 });
+
 
   // ----------------------------------------------------------
   // Cargar datos cada vez que la pantalla está en foco
@@ -42,12 +45,20 @@ const Calendario = ({ navigation }) => {
       cargarDias();
     }, [])
   );
+  useEffect(() => {
+  obtenerResumenMes(
+    fechaActual.getFullYear(),
+    fechaActual.getMonth() + 1
+  ).then(setResumenMes);
+}, [fechaActual]);
+
 
   // ----------------------------------------------------------
   // FUNCIÓN: cargarDias
   // QUÉ HACE: Obtiene todos los días de la base de datos
   // y los convierte en un objeto de fácil acceso
   // ----------------------------------------------------------
+  
   const cargarDias = () => {
     const dias = obtenerTodosDias();
     const mapaDeEstados = {};
@@ -147,6 +158,29 @@ const Calendario = ({ navigation }) => {
           <Text style={estilos.textoBotonMes}>{'›'}</Text>
         </TouchableOpacity>
       </View>
+      {/* Resumen mensual */}
+<View style={estilos.resumenMensual}>
+  <View style={estilos.columnaResumen}>
+    <Text style={estilos.labelResumen}>Ingresos</Text>
+    <Text style={estilos.valorIngreso}>+Bs {resumenMes.ingresos.toFixed(2)}</Text>
+  </View>
+  <View style={estilos.separador} />
+  <View style={estilos.columnaResumen}>
+    <Text style={estilos.labelResumen}>Gastos</Text>
+    <Text style={estilos.valorGasto}>-Bs {resumenMes.gastos.toFixed(2)}</Text>
+  </View>
+  <View style={estilos.separador} />
+  <View style={estilos.columnaResumen}>
+    <Text style={estilos.labelResumen}>Balance</Text>
+    <Text style={[
+      estilos.valorBalance,
+      { color: resumenMes.balance >= 0 ? '#30D158' : '#FF3B30' }
+    ]}>
+      {resumenMes.balance >= 0 ? '+' : ''}Bs {resumenMes.balance.toFixed(2)}
+    </Text>
+  </View>
+</View>
+
 
       {/* Nombres de los días de la semana */}
       <View style={estilos.filaDias}>
@@ -288,6 +322,41 @@ numeroDia: {
   puntoNeutro: {
     backgroundColor: colores.neutro,
   },
+  resumenMensual: {
+  flexDirection: 'row',
+  backgroundColor: '#1C1C1E',
+  borderRadius: 14,
+  marginBottom: 16,
+  paddingVertical: 14,
+},
+columnaResumen: {
+  flex: 1,
+  alignItems: 'center',
+},
+labelResumen: {
+  color: '#8E8E93',
+  fontSize: 12,
+  marginBottom: 4,
+},
+valorIngreso: {
+  color: '#30D158',
+  fontSize: 15,
+  fontWeight: '700',
+},
+valorGasto: {
+  color: '#FF3B30',
+  fontSize: 15,
+  fontWeight: '700',
+},
+valorBalance: {
+  fontSize: 15,
+  fontWeight: '700',
+},
+separador: {
+  width: 0.5,
+  backgroundColor: '#2C2C2E',
+},
+
 });
 
 export default Calendario;

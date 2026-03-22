@@ -135,5 +135,38 @@ const actualizarDia = (fecha) => {
     [fecha, balance, estado, balance, estado]
   );
 };
+// ------------------------------------------------------------
+// FUNCIÓN: obtenerResumenMes
+// QUÉ HACE: Suma ingresos y gastos de todo un mes
+// PARÁMETROS: anio (2026), mes (1-12)
+// ------------------------------------------------------------
+export const obtenerResumenMes = (anio, mes) => {
+  const mesStr = String(mes).padStart(2, '0');
+  const patron = `${anio}-${mesStr}-%`;
+
+  const ingresoFila = baseDatos.getFirstSync(
+    `SELECT COALESCE(SUM(precio), 0) as total
+     FROM registros
+     WHERE fecha LIKE ? AND tipo = 'ingreso';`,
+    [patron]
+  );
+
+  const gastoFila = baseDatos.getFirstSync(
+    `SELECT COALESCE(SUM(precio), 0) as total
+     FROM registros
+     WHERE fecha LIKE ? AND tipo = 'gasto';`,
+    [patron]
+  );
+
+  const ingresos = ingresoFila?.total || 0;
+  const gastos = gastoFila?.total || 0;
+
+  return Promise.resolve({
+    ingresos,
+    gastos,
+    balance: ingresos - gastos,
+  });
+};
+
 
 export default baseDatos;
