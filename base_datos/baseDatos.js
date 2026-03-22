@@ -65,29 +65,33 @@ export const inicializarBaseDatos = () => {
 //   - textoOriginal: la frase que escribió el usuario
 // ------------------------------------------------------------
 export const guardarRegistro = (objeto, precio, tipo, fecha, textoOriginal) => {
-  baseDatos.runSync(
-    `INSERT INTO registros (objeto, precio, tipo, fecha, hora, texto_original)
- VALUES (?, ?, ?, ?, ?, ?);`,
-[objeto, precio, tipo, fecha, new Date().toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' }), textoOriginal]
-
-  );
-
-  // Actualizar el resumen del día después de guardar
-  actualizarDia(fecha);
+  try {
+    baseDatos.runSync(
+      `INSERT INTO registros (objeto, precio, tipo, fecha, hora, texto_original)
+       VALUES (?, ?, ?, ?, ?, ?);`,
+      [
+        objeto,
+        precio,
+        tipo,
+        fecha,
+        new Date().toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' }),
+        textoOriginal
+      ]
+    );
+    actualizarDia(fecha);
+  } catch (error) {
+    console.error('Error al guardar registro:', error);
+    throw error;
+  }
 };
 
-// ------------------------------------------------------------
-// FUNCIÓN: obtenerRegistrosPorFecha
-// QUÉ HACE: Devuelve todos los registros de un día específico
-// PARÁMETROS:
-//   - fecha: en formato YYYY-MM-DD
-// ------------------------------------------------------------
 export const obtenerRegistrosPorFecha = (fecha) => {
   return baseDatos.getAllSync(
     `SELECT * FROM registros WHERE fecha = ? ORDER BY creado_en DESC;`,
     [fecha]
   );
 };
+
 
 // ------------------------------------------------------------
 // FUNCIÓN: obtenerTodosDias

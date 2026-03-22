@@ -58,9 +58,19 @@ const Registro = () => {
   // QUÉ HACE: Guarda el registro interpretado en SQLite
   // Solo se llama cuando el usuario confirma el preview
   // ----------------------------------------------------------
-  const alConfirmarRegistro = () => {
-    if (!resultado) return;
+const alConfirmarRegistro = () => {
+  if (!resultado) return;
 
+  // Validar que tenga precio real
+  if (!resultado.precio || resultado.precio <= 0) {
+    Alert.alert(
+      'Precio no detectado',
+      '¿Cuánto fue el monto? Editá el texto e incluí el precio.'
+    );
+    return;
+  }
+
+  try {
     guardarRegistro(
       resultado.objeto,
       resultado.precio,
@@ -69,14 +79,15 @@ const Registro = () => {
       resultado.textoOriginal
     );
 
-    // Limpiar todo después de guardar
     setTexto('');
     setResultado(null);
     setGuardado(true);
-
-    // Ocultar mensaje de éxito después de 2 segundos
     setTimeout(() => setGuardado(false), 2000);
-  };
+  } catch (e) {
+    Alert.alert('Error', 'No se pudo guardar el registro. Intentá de nuevo.');
+  }
+};
+
 
   // ----------------------------------------------------------
   // FUNCIÓN: alCancelarRegistro
