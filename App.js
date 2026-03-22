@@ -1,10 +1,4 @@
-// ============================================================
-// ARCHIVO: App.js
-// QUÉ HACE: Punto de entrada principal de la app
-// Carga la tipografía, inicializa la base de datos
-// ============================================================
-
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator } from 'react-native';
 import { useFonts } from 'expo-font';
@@ -14,11 +8,11 @@ import {
   Inter_600SemiBold,
   Inter_700Bold,
 } from '@expo-google-fonts/inter';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Navegacion from './configuracion/navegacion';
 import { inicializarBaseDatos } from './base_datos/baseDatos';
 
 export default function App() {
-  // Cargar fuentes Inter
   const [fontsCargadas] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
@@ -30,7 +24,6 @@ export default function App() {
     inicializarBaseDatos();
   }, []);
 
-  // Mostrar pantalla de carga mientras cargan las fuentes
   if (!fontsCargadas) {
     return (
       <View style={{ flex: 1, backgroundColor: '#000000', alignItems: 'center', justifyContent: 'center' }}>
@@ -40,9 +33,9 @@ export default function App() {
   }
 
   return (
-    <>
+    <GestureHandlerRootView style={{ flex: 1 }}>
       <StatusBar style="light" />
       <Navegacion />
-    </>
+    </GestureHandlerRootView>
   );
 }

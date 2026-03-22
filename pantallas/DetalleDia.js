@@ -1,10 +1,8 @@
 // ============================================================
 // ARCHIVO: pantallas/DetalleDia.js
-// QUÉ HACE: Muestra todos los registros de un día específico
-// Se abre al tocar un día en el calendario
 // ============================================================
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -12,113 +10,91 @@ import {
   SafeAreaView,
   FlatList,
   TouchableOpacity,
+  Animated,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { obtenerRegistrosPorFecha } from '../base_datos/baseDatos';
+import { GestureHandlerRootView, Swipeable } from 'react-native-gesture-handler';
+import { obtenerRegistrosPorFecha, borrarRegistro } from '../base_datos/baseDatos';
 import { detectarCategoria } from '../logica/interpretador';
 import colores from '../estilos/colores';
-import { Swipeable } from 'react-native-gesture-handler';
-import { obtenerRegistrosPorFecha, borrarRegistro } from '../base_datos/baseDatos';
 
-
-
-// ------------------------------------------------------------
-// NOMBRES DE MESES para mostrar la fecha bonita
-// AQUÍ CAMBIAR: si querés otro idioma
-// ------------------------------------------------------------
 const NOMBRES_MESES = [
   'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
   'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
 ];
 
-const DetalleDia = ({ route, navigation }) => {
-  const { fecha } = route.params;
-  const [registros, setRegistros] = useState([]);
-
-  // PEGAR AQUÍ:
-  const handleBorrar = (id) => {
-    borrarRegistro(id, fecha);
-    setRegistros(obtenerRegistrosPorFecha(fecha));
-  };
-
-  // ----------------------------------------------------------
-  // Cargar registros cada vez que la pantalla está en foco
-  // ----------------------------------------------------------
-  useFocusEffect(
-    useCallback(() => {
-      cargarRegistros();
-    }, [fecha])
-  );
-
-  // ----------------------------------------------------------
-  // FUNCIÓN: cargarRegistros
-  // QUÉ HACE: Obtiene los registros del día desde SQLite
-  // ----------------------------------------------------------
-  const cargarRegistros = () => {
-    const datos = obtenerRegistrosPorFecha(fecha);
-    setRegistros(datos);
-  };
-
-  // ----------------------------------------------------------
-  // FUNCIÓN: formatearFecha
-  // QUÉ HACE: Convierte "2026-03-22" en "22 de marzo, 2026"
-  // ----------------------------------------------------------
-  const formatearFecha = (fechaStr) => {
-    const partes = fechaStr.split('-');
-    const dia = parseInt(partes[2]);
-    const mes = parseInt(partes[1]) - 1;
-    const año = partes[0];
-    return `${dia} de ${NOMBRES_MESES[mes]}, ${año}`;
-  };
-
-  // ----------------------------------------------------------
-  // FUNCIÓN: calcularBalance
-  // QUÉ HACE: Suma ingresos y gastos del día
-  // ----------------------------------------------------------
-  const calcularBalance = () => {
-    const ingresos = registros
-      .filter(r => r.tipo === 'ingreso')
-      .reduce((acc, r) => acc + r.precio, 0);
-    const gastos = registros
-      .filter(r => r.tipo === 'gasto')
-      .reduce((acc, r) => acc + r.precio, 0);
-    return { ingresos, gastos, balance: ingresos - gastos };
-  };
-
-  // ------------------------------------------------------------
-// MAPA DE ÍCONOS POR CATEGORÍA
-// AQUÍ CAMBIAR: íconos de cada categoría (usar Ionicons)
-// Ver todos los íconos en: icons.expo.fyi
-// ------------------------------------------------------------
 const ICONOS_CATEGORIA = {
-  ingreso:     { nombre: 'cash',              color: '#30D158' },
-  comida:      { nombre: 'fast-food',         color: '#FF9F0A' },
-  transporte:  { nombre: 'car',               color: '#0A84FF' },
-  ropa:        { nombre: 'shirt',             color: '#BF5AF2' },
-  cosmeticos:  { nombre: 'color-palette',     color: '#FF375F' },
-  tecnologia:  { nombre: 'hardware-chip',     color: '#64D2FF' },
-  mercado:     { nombre: 'basket',            color: '#30D158' },
-  otros:       { nombre: 'cube',              color: '#8E8E93' },
+  ingreso:     { nombre: 'cash',           color: '#30D158' },
+  comida:      { nombre: 'fast-food',      color: '#FF9F0A' },
+  transporte:  { nombre: 'car',            color: '#0A84FF' },
+  ropa:        { nombre: 'shirt',          color: '#BF5AF2' },
+  cosmeticos:  { nombre: 'color-palette',  color: '#FF375F' },
+  tecnologia:  { nombre: 'hardware-chip',  color: '#64D2FF' },
+  mercado:     { nombre: 'basket',         color: '#30D158' },
+  otros:       { nombre: 'cube',           color: '#8E8E93' },
 };
 
-const AccionBorrar = ({ onPress }) => (
-  <TouchableOpacity style={estilos.botonBorrar} onPress={onPress}>
-    <Text style={estilos.textoBorrar}>Borrar</Text>
-  </TouchableOpacity>
-);
-
+// ------------------------------------------------------------
+// Tarjeta con swipe para borrar (estilo iPhone)
+// ------------------------------------------------------------
 const TarjetaRegistro = ({ item, onBorrar }) => {
-  const categoria = detectarCategoria(
-    item.texto_original || item.objeto,
-    item.tipo
-  );
+  const swipeableRef = useRef(null);
+  const categoria = detectarCategoria(item.texto_original || item.objeto, item.tipo);
   const icono = ICONOS_CATEGORIA[categoria] || ICONOS_CATEGORIA.otros;
+
+  const renderBotonBorrar = (progress, dragX) => {
+    // Cuando jalas de más, el círculo se estira hacia la izquierda
+    const escalaX = dragX.interpolate({
+      inputRange: [-160, -80, 0],
+      outputRange: [1.6, 1, 1],   // se estira cuando pasás de 80px
+      extrapolate: 'clamp',
+    });
+
+    // El círculo también crece un poco verticalmente
+    const escalaY = dragX.interpolate({
+      inputRange: [-160, -80, 0],
+      outputRange: [1.15, 1, 1],
+      extrapolate: 'clamp',
+    });
+
+    // El ícono de basura se mueve con el estiramiento
+    const moverIcono = dragX.interpolate({
+      inputRange: [-160, -80, 0],
+      outputRange: [-20, 0, 0],
+      extrapolate: 'clamp',
+    });
+
+    return (
+      <View style={estilos.contenedorBorrar}>
+        <Animated.View style={[
+          estilos.circuloBorrar,
+          { transform: [{ scaleX: escalaX }, { scaleY: escalaY }] }
+        ]}>
+          <Animated.View style={{ transform: [{ translateX: moverIcono }] }}>
+            <TouchableOpacity
+              onPress={() => {
+                swipeableRef.current?.close();
+                onBorrar(item.id);
+              }}
+              style={estilos.botonInterior}
+            >
+              <Ionicons name="trash" size={20} color="#fff" />
+            </TouchableOpacity>
+          </Animated.View>
+        </Animated.View>
+      </View>
+    );
+  };
 
   return (
     <Swipeable
-      renderRightActions={() => <AccionBorrar onPress={() => onBorrar(item.id)} />}
-      overshootRight={false}
+      ref={swipeableRef}
+      renderRightActions={renderBotonBorrar}
+      overshootRight={true}       // permite jalar de más para el efecto
+      overshootFriction={3}       // resistencia al jalar de más
+      friction={2}
+      rightThreshold={50}
     >
       <View style={estilos.tarjeta}>
         <View style={[estilos.iconoContenedor, { backgroundColor: `${icono.color}22` }]}>
@@ -129,7 +105,6 @@ const TarjetaRegistro = ({ item, onBorrar }) => {
           <Text style={estilos.textoOriginal} numberOfLines={1}>
             {item.texto_original}
           </Text>
-          {/* Hora del registro */}
           {item.hora ? (
             <Text style={estilos.horaRegistro}>{item.hora}</Text>
           ) : null}
@@ -146,92 +121,118 @@ const TarjetaRegistro = ({ item, onBorrar }) => {
 };
 
 
+// ------------------------------------------------------------
+// Pantalla principal
+// ------------------------------------------------------------
+const DetalleDia = ({ route, navigation }) => {
+  const { fecha } = route.params;
+  const [registros, setRegistros] = useState([]);
+
+  useFocusEffect(
+    useCallback(() => {
+      cargarRegistros();
+    }, [fecha])
+  );
+
+  const cargarRegistros = () => {
+    const datos = obtenerRegistrosPorFecha(fecha);
+    setRegistros(datos);
+  };
+
+  const handleBorrar = (id) => {
+    borrarRegistro(id, fecha);
+    setRegistros(obtenerRegistrosPorFecha(fecha));
+  };
+
+  const formatearFecha = (fechaStr) => {
+    const partes = fechaStr.split('-');
+    const dia = parseInt(partes[2]);
+    const mes = parseInt(partes[1]) - 1;
+    const año = partes[0];
+    return `${dia} de ${NOMBRES_MESES[mes]}, ${año}`;
+  };
+
+  const calcularBalance = () => {
+    const ingresos = registros
+      .filter(r => r.tipo === 'ingreso')
+      .reduce((acc, r) => acc + r.precio, 0);
+    const gastos = registros
+      .filter(r => r.tipo === 'gasto')
+      .reduce((acc, r) => acc + r.precio, 0);
+    return { ingresos, gastos, balance: ingresos - gastos };
+  };
 
   const { ingresos, gastos, balance } = calcularBalance();
 
   return (
-    <SafeAreaView style={estilos.contenedor}>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaView style={estilos.contenedor}>
 
-      {/* Encabezado con botón volver */}
-      <View style={estilos.encabezado}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={estilos.botonVolver}
-        >
-          <Ionicons name="chevron-back" size={24} color={colores.acento} />
-        </TouchableOpacity>
-        <Text style={estilos.tituloFecha}>{formatearFecha(fecha)}</Text>
-        <View style={{ width: 40 }} />
-      </View>
-
-      {/* Resumen del día */}
-      <View style={estilos.resumen}>
-        <View style={estilos.itemResumen}>
-          <Text style={estilos.etiquetaResumen}>Ingresos</Text>
-          <Text style={[estilos.valorResumen, { color: colores.positivo }]}>
-            +Bs{ingresos.toFixed(2)}
-          </Text>
+        <View style={estilos.encabezado}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={estilos.botonVolver}>
+            <Ionicons name="chevron-back" size={24} color={colores.acento} />
+          </TouchableOpacity>
+          <Text style={estilos.tituloFecha}>{formatearFecha(fecha)}</Text>
+          <View style={{ width: 40 }} />
         </View>
 
-        {/* Separador vertical */}
-        <View style={estilos.separadorVertical} />
-
-        <View style={estilos.itemResumen}>
-          <Text style={estilos.etiquetaResumen}>Gastos</Text>
-          <Text style={[estilos.valorResumen, { color: colores.negativo }]}>
-            -Bs{gastos.toFixed(2)}
-          </Text>
+        <View style={estilos.resumen}>
+          <View style={estilos.itemResumen}>
+            <Text style={estilos.etiquetaResumen}>Ingresos</Text>
+            <Text style={[estilos.valorResumen, { color: colores.positivo }]}>
+              +Bs{ingresos.toFixed(2)}
+            </Text>
+          </View>
+          <View style={estilos.separadorVertical} />
+          <View style={estilos.itemResumen}>
+            <Text style={estilos.etiquetaResumen}>Gastos</Text>
+            <Text style={[estilos.valorResumen, { color: colores.negativo }]}>
+              -Bs{gastos.toFixed(2)}
+            </Text>
+          </View>
+          <View style={estilos.separadorVertical} />
+          <View style={estilos.itemResumen}>
+            <Text style={estilos.etiquetaResumen}>Balance</Text>
+            <Text style={[
+              estilos.valorResumen,
+              { color: balance >= 0 ? colores.positivo : colores.negativo }
+            ]}>
+              {balance >= 0 ? '+' : ''}Bs{balance.toFixed(2)}
+            </Text>
+          </View>
         </View>
 
-        {/* Separador vertical */}
-        <View style={estilos.separadorVertical} />
+        {registros.length === 0 ? (
+          <View style={estilos.contenedorVacio}>
+            <Ionicons name="document-outline" size={48} color={colores.textoGris} />
+            <Text style={estilos.textoVacio}>Sin registros este día</Text>
+            <Text style={estilos.subtextoVacio}>Andá a Registrar para agregar uno</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={registros}
+            keyExtractor={item => item.id.toString()}
+            renderItem={({ item }) => (
+              <TarjetaRegistro item={item} onBorrar={handleBorrar} />
+            )}
+            contentContainerStyle={estilos.lista}
+            ItemSeparatorComponent={() => <View style={estilos.separador} />}
+          />
+        )}
 
-        <View style={estilos.itemResumen}>
-          <Text style={estilos.etiquetaResumen}>Balance</Text>
-          <Text style={[
-            estilos.valorResumen,
-            { color: balance >= 0 ? colores.positivo : colores.negativo }
-          ]}>
-            {balance >= 0 ? '+' : ''}Bs{balance.toFixed(2)}
-          </Text>
-        </View>
-      </View>
-
-      {/* Lista de registros */}
-      {registros.length === 0 ? (
-        // Pantalla vacía si no hay registros
-        <View style={estilos.contenedorVacio}>
-          <Ionicons name="document-outline" size={48} color={colores.textoGris} />
-          <Text style={estilos.textoVacio}>Sin registros este día</Text>
-          <Text style={estilos.subtextoVacio}>
-            Andá a Registrar para agregar uno
-          </Text>
-        </View>
-      ) : (
-        <FlatList
-          data={registros}
-          keyExtractor={item => item.id.toString()}
-          renderItem={({ item }) => <TarjetaRegistro item={item} onBorrar={handleBorrar} />}
-          contentContainerStyle={estilos.lista}
-          ItemSeparatorComponent={() => <View style={estilos.separador} />}
-        />
-      )}
-
-    </SafeAreaView>
+      </SafeAreaView>
+    </GestureHandlerRootView>
   );
 };
 
 // ------------------------------------------------------------
 // ESTILOS
-// AQUÍ CAMBIAR: todo el diseño visual del detalle del día
 // ------------------------------------------------------------
 const estilos = StyleSheet.create({
   contenedor: {
     flex: 1,
     backgroundColor: colores.fondoPrincipal,
   },
-
-  // Encabezado
   encabezado: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -250,8 +251,6 @@ const estilos = StyleSheet.create({
     fontSize: 17,
     fontWeight: '600',
   },
-
-  // Resumen del día
   resumen: {
     flexDirection: 'row',
     backgroundColor: colores.fondoTarjeta,
@@ -278,8 +277,6 @@ const estilos = StyleSheet.create({
     width: 1,
     backgroundColor: colores.separador,
   },
-
-  // Lista de registros
   lista: {
     paddingHorizontal: 16,
   },
@@ -288,6 +285,7 @@ const estilos = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     gap: 12,
+    backgroundColor: colores.fondoPrincipal, // <-- clave: tapa el botón cuando está cerrado
   },
   iconoContenedor: {
     width: 40,
@@ -295,14 +293,6 @@ const estilos = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  iconoGasto: {
-    // AQUÍ CAMBIAR: fondo del ícono de gasto
-    backgroundColor: 'rgba(255, 69, 58, 0.15)',
-  },
-  iconoIngreso: {
-    // AQUÍ CAMBIAR: fondo del ícono de ingreso
-    backgroundColor: 'rgba(48, 209, 88, 0.15)',
   },
   infoRegistro: {
     flex: 1,
@@ -318,6 +308,11 @@ const estilos = StyleSheet.create({
     color: colores.textoGris,
     fontSize: 13,
   },
+  horaRegistro: {
+    color: '#555',
+    fontSize: 11,
+    marginTop: 2,
+  },
   precio: {
     fontSize: 16,
     fontWeight: '600',
@@ -332,8 +327,6 @@ const estilos = StyleSheet.create({
     height: 1,
     backgroundColor: colores.separador,
   },
-
-  // Estado vacío
   contenedorVacio: {
     flex: 1,
     alignItems: 'center',
@@ -349,24 +342,32 @@ const estilos = StyleSheet.create({
     color: colores.textoGris,
     fontSize: 14,
   },
-  botonBorrar: {
-  backgroundColor: '#FF3B30',
-  justifyContent: 'center',
-  alignItems: 'center',
-  width: 80,
-  marginVertical: 4,
-  borderRadius: 12,
-},
-textoBorrar: {
-  color: '#fff',
-  fontWeight: '700',
-  fontSize: 15,
-},
-horaRegistro: {
-  color: '#555',
-  fontSize: 11,
-  marginTop: 2,
-},
+  // Botón rojo de borrar
+  // Zona donde vive el círculo (invisible, solo da espacio)
+  contenedorBorrar: {
+    width: 80,
+    alignItems: 'flex-start',    // el círculo sale desde la derecha
+    justifyContent: 'center',
+    overflow: 'visible',         // permite que el círculo se expanda
+  },
+  // El círculo rojo animado
+  circuloBorrar: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,            // perfecto círculo
+    backgroundColor: '#FF3B30',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 10,
+  },
+  // Área tocable dentro del círculo
+  botonInterior: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 
 });
 

@@ -174,7 +174,7 @@ export const detectarCategoria = (texto, tipo) => {
   const comida = ['hamburguesa', 'pizza', 'café', 'cafe', 'almuerzo', 'cena',
     'desayuno', 'comida', 'burger', 'sushi', 'pollo', 'sandwich',
     'empanada', 'salteña', 'restaurant', 'restaurante', 'mcdonalds',
-    'subway', 'dominos', 'snack', 'helado', 'postre', 'pan'];
+    'subway', 'dominos', 'snack', 'helado', 'postre', 'pan', 'dulce', 'Pastilla', 'chicle',];
   if (comida.some(p => t.includes(p))) return 'comida';
 
   // Transporte y viajes

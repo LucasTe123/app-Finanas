@@ -20,10 +20,7 @@ const baseDatos = SQLite.openDatabaseSync('asistente.db');
 // ------------------------------------------------------------
 export const inicializarBaseDatos = () => {
 
-  // ----------------------------------------------------------
-  // TABLA: registros
-  // Guarda cada gasto o ingreso que el usuario registra
-  // ----------------------------------------------------------
+  // Crear tabla si no existe (sin columna hora, para compatibilidad)
   baseDatos.execSync(`
     CREATE TABLE IF NOT EXISTS registros (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -37,11 +34,13 @@ export const inicializarBaseDatos = () => {
     );
   `);
 
-  // ----------------------------------------------------------
-  // TABLA: dias
-  // Guarda el resumen de cada día (positivo o negativo)
-  // Esto es lo que usa el calendario para mostrar el punto
-  // ----------------------------------------------------------
+  // MIGRACIÓN: agregar columna 'hora' si no existe en tabla vieja
+  try {
+    baseDatos.execSync(`ALTER TABLE registros ADD COLUMN hora TEXT DEFAULT '';`);
+  } catch (e) {
+    // Si ya existe la columna, el ALTER TABLE falla, y eso está bien
+  }
+
   baseDatos.execSync(`
     CREATE TABLE IF NOT EXISTS dias (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -53,6 +52,7 @@ export const inicializarBaseDatos = () => {
 
   console.log('Base de datos inicializada correctamente');
 };
+
 
 // ------------------------------------------------------------
 // FUNCIÓN: guardarRegistro
