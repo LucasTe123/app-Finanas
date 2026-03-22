@@ -1,33 +1,32 @@
 {
   "expo": {
-    "name": "asistente-financiero",
+    "name": "Asistente Financiero",
     "slug": "asistente-financiero",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "userInterfaceStyle": "dark",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#000000"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "com.tuNombre.asistenteFinanciero",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "Usamos Face ID para proteger tu información financiera",
+        "NSSiriUsageDescription": "Usamos Siri para registrar gastos por voz"
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
-      "edgeToEdgeEnabled": true
-    },
-    "web": {
-      "favicon": "./assets/favicon.png"
+        "backgroundColor": "#000000"
+      }
     },
     "plugins": [
-      "expo-sqlite",
-      "expo-font"
+      "expo-sqlite"
     ]
   }
 }
