@@ -1,11 +1,14 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import Calendario from '../pantallas/Calendario';
 import Registro from '../pantallas/Registro';
+import DetalleDia from '../pantallas/DetalleDia';
 
 const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
 
 const COLORES = {
   fondoTab: '#111111',
@@ -14,9 +17,17 @@ const COLORES = {
   borde: '#222222',
 };
 
+// Stack del calendario (incluye pantalla de detalle)
+const StackCalendario = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="CalendarioPrincipal" component={Calendario} />
+      <Stack.Screen name="DetalleDia" component={DetalleDia} />
+    </Stack.Navigator>
+  );
+};
+
 const Navegacion = () => {
-  console.log('Calendario:', Calendario);
-  console.log('Registro:', Registro);
   return (
     <NavigationContainer>
       <Tab.Navigator
@@ -43,7 +54,7 @@ const Navegacion = () => {
           headerShown: false,
         })}
       >
-        <Tab.Screen name="CalendarioTab" component={Calendario} options={{ tabBarLabel: 'Calendario' }} />
+        <Tab.Screen name="CalendarioTab" component={StackCalendario} options={{ tabBarLabel: 'Calendario' }} />
         <Tab.Screen name="RegistroTab" component={Registro} options={{ tabBarLabel: 'Registrar' }} />
       </Tab.Navigator>
     </NavigationContainer>
