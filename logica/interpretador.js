@@ -205,19 +205,30 @@ export const interpretarTexto = (texto) => {
 
 // ------------------------------------------------------------
 // FUNCIÓN: interpretarTextoConIA
-// QUÉ HACE: Versión mejorada usando IA externa (requiere internet)
-// POR AHORA: solo llama al interpretador offline
-// FUTURO: aquí se conectará a OpenAI o similar
-// AQUÍ CONECTAR: tu API key de IA cuando estés online
+// QUÉ HACE: Usa IA externa si está disponible, sino offline
+// FUTURO: aquí se conectará a OpenAI, Gemini, etc.
 // ------------------------------------------------------------
-export const interpretarTextoConIA = async (texto, apiKey = null) => {
-  // Si no hay conexión o API key, usar versión offline
-  if (!apiKey) {
+export const interpretarTextoConIA = async (texto) => {
+  // Importar configuración
+  const entorno = (await import('../configuracion/entorno')).default;
+
+  // Si no hay API key configurada, usar versión offline
+  if (!entorno.tieneIA) {
+    console.log('Sin API key, usando interpretador offline');
     return interpretarTexto(texto);
   }
 
-  // TODO: implementar llamada a IA externa aquí
-  // Ejemplo futuro:
-  // const respuesta = await fetch('https://api.openai.com/v1/...', {...})
+  // TODO: implementar llamada a IA externa
+  // Ejemplo futuro con OpenAI:
+  // const respuesta = await fetch('https://api.openai.com/v1/chat/completions', {
+  //   method: 'POST',
+  //   headers: {
+  //     'Authorization': `Bearer ${entorno.iaApiKey}`,
+  //     'Content-Type': 'application/json',
+  //   },
+  //   body: JSON.stringify({ ... })
+  // });
+
   return interpretarTexto(texto);
 };
+
