@@ -172,7 +172,7 @@ const Registro = () => {
             <View style={estilos.filaResultado}>
               <Text style={estilos.etiqueta}>Precio</Text>
               <Text style={estilos.valor}>
-                {resultado.precio > 0 ? `$${resultado.precio}` : 'No detectado'}
+               {resultado.precio > 0 ? `Bs ${resultado.precio}` : 'No detectado'}
               </Text>
             </View>
 

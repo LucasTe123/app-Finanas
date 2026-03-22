@@ -16,6 +16,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { obtenerRegistrosPorFecha } from '../base_datos/baseDatos';
+import { detectarCategoria } from '../logica/interpretador';
 import colores from '../estilos/colores';
 
 // ------------------------------------------------------------
@@ -77,22 +78,41 @@ const DetalleDia = ({ route, navigation }) => {
     return { ingresos, gastos, balance: ingresos - gastos };
   };
 
-  // ----------------------------------------------------------
-  // COMPONENTE: TarjetaRegistro
-  // QUÉ HACE: Renderiza un registro individual en la lista
-  // ----------------------------------------------------------
-  const TarjetaRegistro = ({ item }) => (
+  // ------------------------------------------------------------
+// MAPA DE ÍCONOS POR CATEGORÍA
+// AQUÍ CAMBIAR: íconos de cada categoría (usar Ionicons)
+// Ver todos los íconos en: icons.expo.fyi
+// ------------------------------------------------------------
+const ICONOS_CATEGORIA = {
+  ingreso:     { nombre: 'cash',              color: '#30D158' },
+  comida:      { nombre: 'fast-food',         color: '#FF9F0A' },
+  transporte:  { nombre: 'car',               color: '#0A84FF' },
+  ropa:        { nombre: 'shirt',             color: '#BF5AF2' },
+  cosmeticos:  { nombre: 'color-palette',     color: '#FF375F' },
+  tecnologia:  { nombre: 'hardware-chip',     color: '#64D2FF' },
+  mercado:     { nombre: 'basket',            color: '#30D158' },
+  otros:       { nombre: 'cube',              color: '#8E8E93' },
+};
+
+const TarjetaRegistro = ({ item }) => {
+  // Detectar categoría para elegir ícono
+  const categoria = detectarCategoria(
+    item.texto_original || item.objeto,
+    item.tipo
+  );
+  const icono = ICONOS_CATEGORIA[categoria] || ICONOS_CATEGORIA.otros;
+
+  return (
     <View style={estilos.tarjeta}>
-      {/* Ícono según tipo */}
+      {/* Ícono de categoría */}
       <View style={[
         estilos.iconoContenedor,
-        item.tipo === 'gasto' ? estilos.iconoGasto : estilos.iconoIngreso
+        { backgroundColor: `${icono.color}22` }
       ]}>
         <Ionicons
-          // AQUÍ CAMBIAR: íconos de gasto e ingreso
-          name={item.tipo === 'gasto' ? 'arrow-down' : 'arrow-up'}
-          size={18}
-          color={item.tipo === 'gasto' ? colores.negativo : colores.positivo}
+          name={icono.nombre}
+          size={20}
+          color={icono.color}
         />
       </View>
 
@@ -104,15 +124,17 @@ const DetalleDia = ({ route, navigation }) => {
         </Text>
       </View>
 
-      {/* Precio */}
+      {/* Precio en Bs */}
       <Text style={[
         estilos.precio,
         item.tipo === 'gasto' ? estilos.precioGasto : estilos.precioIngreso
       ]}>
-        {item.tipo === 'gasto' ? '-' : '+'}${item.precio}
+        {item.tipo === 'gasto' ? '-' : '+'}Bs {item.precio}
       </Text>
     </View>
   );
+};
+
 
   const { ingresos, gastos, balance } = calcularBalance();
 
@@ -136,7 +158,7 @@ const DetalleDia = ({ route, navigation }) => {
         <View style={estilos.itemResumen}>
           <Text style={estilos.etiquetaResumen}>Ingresos</Text>
           <Text style={[estilos.valorResumen, { color: colores.positivo }]}>
-            +${ingresos.toFixed(2)}
+            +Bs{ingresos.toFixed(2)}
           </Text>
         </View>
 
@@ -146,7 +168,7 @@ const DetalleDia = ({ route, navigation }) => {
         <View style={estilos.itemResumen}>
           <Text style={estilos.etiquetaResumen}>Gastos</Text>
           <Text style={[estilos.valorResumen, { color: colores.negativo }]}>
-            -${gastos.toFixed(2)}
+            -Bs{gastos.toFixed(2)}
           </Text>
         </View>
 
@@ -159,7 +181,7 @@ const DetalleDia = ({ route, navigation }) => {
             estilos.valorResumen,
             { color: balance >= 0 ? colores.positivo : colores.negativo }
           ]}>
-            {balance >= 0 ? '+' : ''}${balance.toFixed(2)}
+            {balance >= 0 ? '+' : ''}Bs{balance.toFixed(2)}
           </Text>
         </View>
       </View>

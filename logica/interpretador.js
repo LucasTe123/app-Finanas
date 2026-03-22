@@ -158,6 +158,59 @@ const detectarFecha = (texto) => {
 
   return obtenerFecha(0);
 };
+// ------------------------------------------------------------
+// FUNCIÓN: detectarCategoria
+// QUÉ HACE: Detecta la categoría del objeto para mostrar
+// el ícono correcto en la lista de registros
+// AQUÍ AGREGAR: más palabras clave por categoría
+// ------------------------------------------------------------
+export const detectarCategoria = (texto, tipo) => {
+  const t = texto.toLowerCase();
+
+  // Si es ingreso, siempre mostrar billete
+  if (tipo === 'ingreso') return 'ingreso';
+
+  // Comida y restaurantes
+  const comida = ['hamburguesa', 'pizza', 'café', 'cafe', 'almuerzo', 'cena',
+    'desayuno', 'comida', 'burger', 'sushi', 'pollo', 'sandwich',
+    'empanada', 'salteña', 'restaurant', 'restaurante', 'mcdonalds',
+    'subway', 'dominos', 'snack', 'helado', 'postre', 'pan'];
+  if (comida.some(p => t.includes(p))) return 'comida';
+
+  // Transporte y viajes
+  const transporte = ['uber', 'yango', 'indrive', 'taxi', 'bus', 'trufi',
+    'micro', 'gasolina', 'nafta', 'combustible', 'pasaje',
+    'viaje', 'transporte', 'minibus', 'moto'];
+  if (transporte.some(p => t.includes(p))) return 'transporte';
+
+  // Ropa y calzado
+  const ropa = ['ropa', 'camisa', 'pantalon', 'vestido', 'zapatos',
+    'zapatillas', 'tenis', 'chompa', 'chaqueta', 'polo',
+    'short', 'falda', 'medias', 'calzado', 'jean'];
+  if (ropa.some(p => t.includes(p))) return 'ropa';
+
+  // Cosméticos y belleza
+  const cosmeticos = ['maquillaje', 'crema', 'shampoo', 'perfume',
+    'labial', 'rimel', 'base', 'delineador', 'esmalte',
+    'cosmetico', 'belleza', 'peluqueria', 'barberia'];
+  if (cosmeticos.some(p => t.includes(p))) return 'cosmeticos';
+
+  // Tecnología
+  const tecnologia = ['celular', 'telefono', 'laptop', 'computadora',
+    'auriculares', 'cable', 'cargador', 'tablet', 'teclado',
+    'mouse', 'internet', 'netflix', 'spotify', 'app'];
+  if (tecnologia.some(p => t.includes(p))) return 'tecnologia';
+
+  // Supermercado y mercado
+  const mercado = ['mercado', 'supermercado', 'verdura', 'fruta',
+    'leche', 'huevo', 'arroz', 'aceite', 'azucar', 'sal',
+    'compras', 'fideos', 'carne', 'pollo'];
+  if (mercado.some(p => t.includes(p))) return 'mercado';
+
+  // Por defecto: otros
+  return 'otros';
+};
+
 
 
 // ------------------------------------------------------------
