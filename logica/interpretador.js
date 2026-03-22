@@ -32,30 +32,37 @@ const PALABRAS_INGRESO = [
 // AQUÍ AGREGAR: más referencias de tiempo si querés
 // ------------------------------------------------------------
 const PALABRAS_TIEMPO = {
-  'hoy': 0,
-  'ayer': -1,
   'anteayer': -2,
   'antes de ayer': -2,
+  'ayer': -1,
+  'hoy': 0,
 };
+
 
 // ------------------------------------------------------------
 // FUNCIÓN AUXILIAR: obtenerFecha
 // QUÉ HACE: Calcula la fecha según la referencia de tiempo
-// PARÁMETROS:
-//   - diasAtras: número de días hacia atrás (0 = hoy)
-// DEVUELVE: fecha en formato YYYY-MM-DD
+// CORREGIDO: usa hora local en lugar de UTC para evitar
+// desfase de zona horaria (Bolivia = UTC-4)
 // ------------------------------------------------------------
 const obtenerFecha = (diasAtras = 0) => {
-  const fecha = new Date();
-  fecha.setDate(fecha.getDate() - diasAtras);
+  const hoy = new Date();
+  
+  // Crear fecha usando año, mes y día locales (evita problemas UTC)
+  const fechaLocal = new Date(
+    hoy.getFullYear(),
+    hoy.getMonth(),
+    hoy.getDate() - diasAtras  // restar días correctamente
+  );
 
-  // Formato YYYY-MM-DD para SQLite
-  const año = fecha.getFullYear();
-  const mes = String(fecha.getMonth() + 1).padStart(2, '0');
-  const dia = String(fecha.getDate()).padStart(2, '0');
+  const año = fechaLocal.getFullYear();
+  const mes = String(fechaLocal.getMonth() + 1).padStart(2, '0');
+  const dia = String(fechaLocal.getDate()).padStart(2, '0');
 
   return `${año}-${mes}-${dia}`;
 };
+
+
 
 // ------------------------------------------------------------
 // FUNCIÓN AUXILIAR: extraerPrecio
@@ -140,18 +147,18 @@ const detectarTipo = (texto) => {
 // DEVUELVE: fecha en formato YYYY-MM-DD
 // ------------------------------------------------------------
 const detectarFecha = (texto) => {
-  const textoMinusculas = texto.toLowerCase();
+  const textoMinusculas = texto.toLowerCase().trim();
 
-  // Buscar palabras de tiempo conocidas
   for (const [palabra, dias] of Object.entries(PALABRAS_TIEMPO)) {
     if (textoMinusculas.includes(palabra)) {
-      return obtenerFecha(dias);
+      console.log('Palabra detectada:', palabra, 'Días atrás:', dias);
+      return obtenerFecha(Math.abs(dias));
     }
   }
 
-  // Si no encuentra referencia de tiempo, usar hoy
   return obtenerFecha(0);
 };
+
 
 // ------------------------------------------------------------
 // FUNCIÓN PRINCIPAL: interpretarTexto
