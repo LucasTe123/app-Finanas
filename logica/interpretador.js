@@ -1,3 +1,5 @@
+import entorno from '../configuracion/entorno';
+
 // ============================================================
 // ARCHIVO: logica/interpretador.js
 // QUÉ HACE: Interpreta frases en español y las convierte
@@ -262,26 +264,69 @@ export const interpretarTexto = (texto) => {
 // FUTURO: aquí se conectará a OpenAI, Gemini, etc.
 // ------------------------------------------------------------
 export const interpretarTextoConIA = async (texto) => {
-  // Importar configuración
-  const entorno = (await import('../configuracion/entorno')).default;
 
-  // Si no hay API key configurada, usar versión offline
-  if (!entorno.tieneIA) {
-    console.log('Sin API key, usando interpretador offline');
+  console.log('tieneIA:', entorno.tieneIA);
+  console.log('tiene key:', !!entorno.iaApiKey);
+
+  if (!entorno.tieneIA || !entorno.iaApiKey) {
     return interpretarTexto(texto);
   }
 
-  // TODO: implementar llamada a IA externa
-  // Ejemplo futuro con OpenAI:
-  // const respuesta = await fetch('https://api.openai.com/v1/chat/completions', {
-  //   method: 'POST',
-  //   headers: {
-  //     'Authorization': `Bearer ${entorno.iaApiKey}`,
-  //     'Content-Type': 'application/json',
-  //   },
-  //   body: JSON.stringify({ ... })
-  // });
+  try {
+    const prompt = `
+Eres un asistente que interpreta frases de gastos e ingresos en español boliviano.
+Analiza esta frase y devuelve SOLO un JSON sin explicación, con este formato exacto:
+{
+  "objeto": "nombre del producto o servicio",
+  "precio": número,
+  "tipo": "gasto" o "ingreso",
+  "fecha": "hoy" o "ayer" o "anteayer"
+}
 
-  return interpretarTexto(texto);
+Frase: "${texto}"
+    `;
+
+    const respuesta = await fetch(
+  'https://openrouter.ai/api/v1/chat/completions',
+  {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${entorno.iaApiKey}`,
+    },
+    body: JSON.stringify({
+      model: 'google/gemini-2.0-flash-001',
+      messages: [{ role: 'user', content: prompt }],
+    })
+  }
+);
+
+const data = await respuesta.json();
+console.log('Respuesta OpenRouter:', JSON.stringify(data));
+
+const textoRespuesta = data.choices[0].message.content;
+const match = textoRespuesta.match(/\{[\s\S]*\}/);
+if (!match) throw new Error('Sin JSON válido');
+const resultado = JSON.parse(match[0]);
+
+
+    const mapaFechas = { hoy: 0, ayer: 1, anteayer: 2 };
+    const diasAtras = mapaFechas[resultado.fecha] ?? 0;
+
+    return {
+      objeto: resultado.objeto || 'sin especificar',
+      precio: resultado.precio || 0,
+      tipo: resultado.tipo || 'gasto',
+      fecha: obtenerFecha(diasAtras),
+      textoOriginal: texto,
+      confianza: 'alta',
+    };
+
+  } catch (error) {
+    console.error('Error con Gemini, usando offline:', error);
+    return interpretarTexto(texto);
+  }
 };
+
+
 

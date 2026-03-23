@@ -16,7 +16,8 @@
       "bundleIdentifier": "com.tuNombre.asistenteFinanciero",
       "infoPlist": {
         "NSFaceIDUsageDescription": "Usamos Face ID para proteger tu información financiera",
-        "NSSiriUsageDescription": "Usamos Siri para registrar gastos por voz"
+        "NSSiriUsageDescription": "Usamos Siri para registrar gastos por voz",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -27,6 +28,11 @@
     },
     "plugins": [
       "expo-sqlite"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "017208bf-6851-4059-be78-fe77f81d517b"
+      }
+    }
   }
 }

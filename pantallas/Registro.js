@@ -17,7 +17,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { interpretarTexto } from '../logica/interpretador';
+import { interpretarTextoConIA } from '../logica/interpretador';
 import { guardarRegistro } from '../base_datos/baseDatos';
 import colores from '../estilos/colores';
 
@@ -36,22 +36,18 @@ const Registro = () => {
   // QUÉ HACE: Toma el texto y lo interpreta con la IA offline
   // Muestra un preview antes de confirmar el guardado
   // ----------------------------------------------------------
-  const alInterpretarTexto = () => {
-    if (!texto.trim()) {
-      Alert.alert('Texto vacío', 'Escribí algo para registrar');
-      return;
-    }
-
-    setCargando(true);
-    setGuardado(false);
-
-    // Simular pequeño delay para feedback visual
-    setTimeout(() => {
-      const interpretacion = interpretarTexto(texto);
-      setResultado(interpretacion);
-      setCargando(false);
-    }, 400);
-  };
+ const alInterpretarTexto = () => {
+  if (!texto.trim()) {
+    Alert.alert('Texto vacío', 'Escribí algo para registrar');
+    return;
+  }
+  setCargando(true);
+  setGuardado(false);
+ interpretarTextoConIA(texto).then((interpretacion) => {
+  setResultado(interpretacion);
+  setCargando(false);
+});
+};
 
   // ----------------------------------------------------------
   // FUNCIÓN: alConfirmarRegistro
